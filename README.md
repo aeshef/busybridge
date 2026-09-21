@@ -55,3 +55,7 @@ python3 manage.py disable   # Stop syncing; keep existing blocks
 **Your Mac must be awake and logged in.** Sync covers the next 60 days and depends on macOS account sync. This is an early, locally built app, not a notarized installer.
 
 [How it works, privacy & troubleshooting →](docs/guide.md)
+
+## License
+
+[MIT](LICENSE) © 2026 aeshef
