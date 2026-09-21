@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">BusyBridge</title>
+  <desc id="desc">Two calendar pages joined by a teal bridge on a dark rounded square.</desc>
+  <rect width="128" height="128" rx="30" fill="#102629"/>
+  <rect x="18" y="33" width="38" height="57" rx="9" fill="#f0faf5"/>
+  <rect x="72" y="33" width="38" height="57" rx="9" fill="#f0faf5"/>
+  <path d="M28 29v12m18-12v12m36-12v12m18-12v12" stroke="#83dfbb" stroke-width="6" stroke-linecap="round"/>
+  <path d="M24 51h26m28 0h26" stroke="#c8ded5" stroke-width="3"/>
+  <path d="M39 82c0-33 50-33 50 0" fill="none" stroke="#12a97e" stroke-width="10" stroke-linecap="round"/>
+  <path d="M39 81h50" stroke="#12a97e" stroke-width="6" stroke-linecap="round"/>
+</svg>

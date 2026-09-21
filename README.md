@@ -1,89 +1,57 @@
-# BusyBridge
+<p align="center">
+  <img src="assets/logo.svg" width="96" height="96" alt="BusyBridge logo">
+</p>
+<h1 align="center">BusyBridge</h1>
+<p align="center"><strong>Share your availability. Keep the details yours.</strong></p>
+<p align="center">Apple Calendar → anonymous busy blocks → Google Calendar → Calendly</p>
 
-Локальная утилита macOS: выбранные календари Apple → обезличенные блоки в отдельном Google-календаре → Calendly.
+A small macOS utility that keeps your booking availability in sync with your personal and work calendars. Runs locally every 5 minutes. No server, subscription, or separate Google API credentials.
 
-**Share your availability, not your event details.**
+- Copies occupied times, never event titles, descriptions, or participants.
+- Merges overlapping events and reconciles moves and cancellations.
+- Uses calendar accounts already connected to your Mac.
 
-Для тех, кто ведёт личные и рабочие календари в Apple Calendar, но использует сервис бронирования, подключённый к Google. Источниками служат выбранные календари, доступные через EventKit на Mac, включая iCloud и другие подключённые аккаунты. Подключение iCloud отдельно не требуется. Работоспособность конкретного корпоративного аккаунта зависит от его настроек и ограничений.
+## Install
 
-Это ранняя утилита для самостоятельной сборки, проверенная на одном Mac с macOS 26.3.1. Установщика с графическим интерфейсом, нотарификации Apple и проверки на других версиях macOS пока нет.
-
-## Требования
-
-- macOS 14 или новее для используемого API полного доступа EventKit; другие версии, кроме указанной выше, пока не проверены.
-- Xcode или Command Line Tools с компилятором Swift, Python 3.8+.
-- Google-аккаунт, подключённый к Apple Calendar, и отдельный доступный для записи Google-календарь.
-- Разрешение BusyBridge на полный доступ к календарям.
-
-## Исходники
-
-| Файл | Назначение |
-|---|---|
-| `main.swift` | Разрешение macOS, чтение интервалов через EventKit, создание и сверка заглушек |
-| `Planner.swift` | Объединение интервалов, расчёт изменений и тесты |
-| `build.sh` | Сборка `.app`, локальная подпись и запуск тестов |
-| `manage.py` | Установка, конфигурация, ручной прогон и управление LaunchAgent |
-
-В репозитории нет рабочих настроек или выгрузок календарей. Они хранятся отдельно в `~/Library/Application Support/BusyBridge`. Локальная пересборка и замена приложения может потребовать повторной выдачи разрешения Calendar.
-
-## Что передаётся
-
-В Google создаются события «Занято»: время начала/окончания, статус Busy и технический URL-маркер принадлежности утилите (`busybridge://managed/<случайный UUID>`). Маркер не содержит идентификаторов или содержания исходных встреч. Названия, описания, участники, места, исходные ссылки не копируются. Названия исходных встреч код не читает. Для отказавшихся от приглашения проверяется только статус текущего пользователя.
-
-Пересекающиеся и смежные интервалы объединяются, скрывая количество исходных встреч. Отменённые события, события Free и приглашения, отклонённые пользователем, исключаются. События с неизвестной занятостью считаются занятыми. Обработка событий на весь день задаётся при настройке. Повторения разворачивает EventKit; используется окно 60 календарных дней с полуночи текущего дня. Прошедшие блоки остаются в истории.
-
-## Устройство
-
-- `~/Applications/BusyBridge.app` — собственное приложение с разрешением Calendar Full Access.
-- `~/Library/Application Support/BusyBridge/config.json` — явные ID источников/назначения, настройки и случайный UUID владельца.
-- `~/Library/Application Support/BusyBridge/*-result.json` — последний результат команды, только счётчики/статус; `list`/`authorize` содержат названия календарей, но не встреч.
-- `pending-removals.json` — ID собственных заглушек и время обнаружения исчезнувшего интервала.
-- `~/Library/LaunchAgents/local.busybridge.calendar.plist` — запуск каждые 300 секунд и при входе пользователя.
-
-LaunchAgent запускает приложение через LaunchServices. Не нужны root, cron, сервер или отдельный Google API-токен. Пересекающиеся запуски блокируются файловой блокировкой. Приложение использует уже подключённый в macOS Google-аккаунт.
-
-При переносе сначала добавляется новый блок, затем старый удаляется после двух наблюдений с интервалом минимум 4 минуты. Только собственные заглушки могут быть изменены или удалены. При исчезновении любого настроенного календаря запись прерывается. Если пользователь добавил участников/повторения к заглушке, запись тоже останавливается. Ничьи приглашения не рассылаются.
-
-## Сборка и настройка
-
-В каталоге исходников:
+Requires **macOS 14+**, **Xcode Command Line Tools** (`xcode-select --install`) and **Python 3.8+**. Tested on macOS 26.3.1; other versions are unverified.
 
 ```sh
+git clone https://github.com/aeshef/busybridge.git
+cd busybridge
 bash build.sh
 python3 manage.py install
 python3 manage.py authorize
 python3 manage.py list
 ```
 
-Разрешение доступа выдаётся пользователем в системном диалоге. При необходимости: Системные настройки → Конфиденциальность и безопасность → Календари → BusyBridge → Полный доступ.
+Allow **Full Calendar Access** when macOS asks. In Google Calendar, create a separate calendar named **BusyBridge**, then wait for it to appear in Apple Calendar.
 
-Создать отдельный календарь «Занятость» в Google Calendar через веб-настройки. Google может не разрешать создание дополнительного календаря через EventKit. Если новый календарь не появляется в Apple Calendar, включить его синхронизацию в настройках Google и обновить календари на Mac. Не использовать локальный или iCloud-календарь в качестве назначения.
+## Connect & run
 
-Выбрать явные ID из `list`, затем:
-
-```sh
-python3 manage.py configure --account GOOGLE_SOURCE_ID --target TARGET_CALENDAR_ID --source FIRST_SOURCE_ID --source SECOND_SOURCE_ID --include-all-day
-python3 manage.py preview
-python3 manage.py sync
-python3 manage.py preview
-python3 manage.py enable
-```
-
-Не указывать `--include-all-day`, если события на весь день не должны блокировать время. Назначение не может быть источником. Google-календари, которые Calendly проверяет напрямую, повторно зеркалировать не нужно. Общие рабочие календари требуют осмысленного выбора.
-
-После первой синхронизации проверить в Google, что блоки дошли. В Calendly → Calendar settings → Calendars to check for conflicts включить «Занятость», сохранив существующие необходимые календари. Календарь для записи новых бронирований не менять на «Занятость». Затем проверить занятый интервал на публичной странице бронирования.
-
-## Управление
+Use the IDs printed by `list`: the target's `source_id` for `--account`, its `id` for `--target`, and each input calendar's `id` for `--source`. These are **local macOS IDs**, not Google Calendar's web IDs.
 
 ```sh
-python3 manage.py status
-python3 manage.py disable
+python3 manage.py configure \
+  --account GOOGLE_SOURCE_ID \
+  --target BUSYBRIDGE_CALENDAR_ID \
+  --source PERSONAL_CALENDAR_ID \
+  --source WORK_CALENDAR_ID
+python3 manage.py preview   # Counts only; no writes
+python3 manage.py sync      # First sync
+python3 manage.py enable    # Every 5 minutes + at login
 ```
 
-Отключение убирает фоновый запуск, но сохраняет существующие заглушки. Конфигурация не перезаписывается автоматически. Для её изменения сначала отключить агент и отдельно спланировать очистку старого назначения, сохраняя UUID владельца для того же календаря.
+Replace the uppercase placeholders. Repeat `--source` as needed. Add `--include-all-day` to block all-day events too. Current placeholder titles are **“Занято”** (Russian for “Busy”).
 
-## Ограничения и проверка
+In **Calendly → Calendar settings**, add BusyBridge to **Calendars to check for conflicts**. Keep your regular calendar selected under **Calendar to add events to**. You can hide BusyBridge in Apple Calendar to avoid seeing duplicates.
 
-Во сне и при выключенном Mac синхронизация не работает; после пробуждения запуск возобновится. EventKit читает локальную копию, поэтому свежесть зависит от синхронизации исходных аккаунтов. Успешная локальная запись **не доказывает** доставку в облако Google или учёт Calendly. Передача в облако может задерживаться. Статус не рассылает уведомления: последнее выполнение проверяется через `status`.
+## Manage
 
-Сборка запускает тесты пустых/пересекающихся/смежных интервалов, дубликатов, отмены, переноса, разделения блока и повторной синхронизации без изменений. После записи приложение перечитывает заглушки и проверяет покрытие требуемых интервалов, Busy и отсутствие деталей. End-to-end проверка требует Google и Calendly.
+```sh
+python3 manage.py status    # Last sync and background job
+python3 manage.py disable   # Stop syncing; keep existing blocks
+```
+
+**Your Mac must be awake and logged in.** Sync covers the next 60 days and depends on macOS account sync. This is an early, locally built app, not a notarized installer.
+
+[How it works, privacy & troubleshooting →](docs/guide.md)
