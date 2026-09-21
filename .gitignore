@@ -1,0 +1,18 @@
+# Local builds and Python cache
+build/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Never version runtime state, accounts, exports or credentials
+config.json
+*-result.json
+pending-removals.json
+*.ics
+*.ical
+*.log
+.env
+.env.*
+*.p12
+*.key
+*.mobileprovision
